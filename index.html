@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sorting Visualizer 3D</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <header>
+    <div class="brand">
+      <div class="cube"></div>
+      <div>
+        Sorting Visualizer <span style="color:var(--accent)">3D</span><br>
+        <small>13 algorithms &middot; 8 languages</small>
+      </div>
+    </div>
+    <div class="head-spacer"></div>
+    <div class="hint">
+      drag to orbit &middot; scroll to zoom &middot; <kbd>Space</kbd> play/pause &middot;
+      <kbd>&larr;</kbd> back &middot; <kbd>&rarr;</kbd> step &middot; <kbd>R</kbd> shuffle
+    </div>
+    <button class="btn" id="btn-compare">Compare two</button>
+    <button class="btn" id="btn-race">Race all 13</button>
+  </header>
+
+  <aside id="sidebar" class="panel">
+    <div class="panel-title">Algorithms</div>
+    <div class="scroll" id="algo-list"></div>
+  </aside>
+
+  <main id="stage" class="panel">
+    <canvas id="canvas"></canvas>
+
+    <div class="stage-head" id="stage-head">
+      <div class="stage-overlay">
+        <div class="stage-title" id="stage-title">Bubble Sort</div>
+        <div class="stage-sub" id="stage-sub">idle</div>
+      </div>
+
+      <div class="legend">
+        <span><i style="background:#3f6ea8"></i>unsorted</span>
+        <span><i style="background:#ffd93d"></i>comparing</span>
+        <span><i style="background:#ff5d5d"></i>swapping</span>
+        <span><i style="background:#22d3ee"></i>writing</span>
+        <span><i style="background:#c084fc"></i>pivot / key</span>
+        <span><i style="background:#35d29a"></i>final position</span>
+      </div>
+    </div>
+
+    <div id="controls">
+      <div class="ctl-row">
+        <button class="btn" id="btn-back" title="Step one operation backwards">&#9664; Back</button>
+        <button class="btn primary" id="btn-play">Play</button>
+        <button class="btn" id="btn-step" title="Step one operation forwards">Step &#9654;</button>
+        <button class="btn" id="btn-reset">Reset</button>
+        <button class="btn" id="btn-shuffle">Shuffle</button>
+        <button class="btn" id="btn-center" title="Recentre and reset the camera">Recentre</button>
+
+        <label class="field">Data
+          <select id="sel-dist">
+            <option value="random">Random</option>
+            <option value="reversed">Reversed</option>
+            <option value="nearly">Nearly sorted</option>
+            <option value="few">Few unique</option>
+            <option value="sorted">Already sorted</option>
+            <option value="sawtooth">Sawtooth</option>
+          </select>
+        </label>
+
+        <div id="stats">
+          <div class="stat"><b id="st-cmp">0</b><span>Compares</span></div>
+          <div class="stat"><b id="st-swap">0</b><span>Swaps</span></div>
+          <div class="stat"><b id="st-write">0</b><span>Writes</span></div>
+          <div class="stat"><b id="st-time">0.0s</b><span>Elapsed</span></div>
+          <div class="stat"><b id="st-prog">0%</b><span>Progress</span></div>
+        </div>
+      </div>
+
+      <div class="ctl-row">
+        <label class="field">Size
+          <input type="range" id="rng-size" min="8" max="140" value="46" step="1">
+          <span class="val" id="lbl-size">46</span>
+        </label>
+
+        <label class="field">Speed
+          <input type="range" id="rng-speed" min="1" max="240" value="34" step="1">
+          <span class="val" id="lbl-speed">34/f</span>
+        </label>
+
+        <label class="field">Depth
+          <input type="range" id="rng-depth" min="0" max="100" value="42" step="1">
+          <span class="val" id="lbl-depth">42</span>
+        </label>
+
+        <label class="switch"><input type="checkbox" id="cb-motion" checked> smooth swaps</label>
+        <label class="switch"><input type="checkbox" id="cb-spin"> auto-orbit</label>
+        <label class="switch"><input type="checkbox" id="cb-labels"> values</label>
+        <label class="switch"><input type="checkbox" id="cb-sound"> sound</label>
+      </div>
+
+      <div class="ctl-row">
+        <label class="field" style="flex:1">Timeline
+          <input type="range" id="rng-scrub" min="0" max="1" value="0" step="1" style="flex:1;width:auto">
+        </label>
+      </div>
+    </div>
+
+    <div id="compare">
+      <div class="cmp-head">
+        <h2>Compare</h2>
+        <label class="field">A
+          <select id="cmp-a"></select>
+        </label>
+        <span class="cmp-vs">vs</span>
+        <label class="field">B
+          <select id="cmp-b"></select>
+        </label>
+        <button class="btn primary" id="cmp-play">Play</button>
+        <button class="btn" id="cmp-step">Step &#9654;</button>
+        <button class="btn" id="cmp-reset">Reset</button>
+        <button class="btn" id="cmp-finish">Run to end</button>
+
+        <label class="field">Speed
+          <input type="range" id="cmp-speed" min="1" max="240" value="34" step="1">
+          <span class="val" id="cmp-lbl-speed">34/f</span>
+        </label>
+
+        <div class="head-spacer" style="flex:1"></div>
+        <button class="btn" id="cmp-close">Close</button>
+      </div>
+
+      <div class="cmp-body">
+        <div class="cmp-panes">
+          <div class="cmp-pane">
+            <div class="cmp-name" id="cmp-name-a">Bubble Sort</div>
+            <canvas id="cmp-canvas-a"></canvas>
+            <div class="cmp-stats" id="cmp-stats-a"></div>
+          </div>
+          <div class="cmp-pane">
+            <div class="cmp-name" id="cmp-name-b">Quick Sort</div>
+            <canvas id="cmp-canvas-b"></canvas>
+            <div class="cmp-stats" id="cmp-stats-b"></div>
+          </div>
+        </div>
+
+        <div class="cmp-verdict" id="cmp-verdict"></div>
+
+        <div class="cmp-table-wrap">
+          <table class="cmp-table" id="cmp-table"></table>
+        </div>
+      </div>
+    </div>
+
+    <div id="race">
+      <div class="race-head">
+        <h2>Race &mdash; every algorithm on the same array</h2>
+        <span class="hint" id="race-note">click any card to watch that algorithm in 3D</span>
+        <div class="head-spacer" style="flex:1"></div>
+        <button class="btn" id="btn-race-restart">Restart</button>
+        <button class="btn" id="btn-race-close">Close</button>
+      </div>
+      <div id="race-grid"></div>
+    </div>
+  </main>
+
+  <aside id="inspect" class="panel">
+    <div class="insp-tabs">
+      <button class="itab active" data-tab="about">Overview</button>
+      <button class="itab" data-tab="code">Code &middot; 8 languages</button>
+    </div>
+
+    <div class="scroll tabpane active" id="tab-about">
+      <div class="insp-section">
+        <div class="insp-name" id="ins-name">Bubble Sort</div>
+        <div class="insp-family" id="ins-family">Exchange</div>
+        <div class="insp-origin" id="ins-origin"></div>
+        <p class="insp-text" id="ins-idea"></p>
+        <p class="insp-text use" id="ins-use"></p>
+      </div>
+
+      <div class="insp-section">
+        <div class="sec-head">How it works</div>
+        <ol class="steps" id="ins-how"></ol>
+      </div>
+
+      <div class="insp-section">
+        <div class="sec-head">Complexity</div>
+        <table class="cx">
+          <tbody>
+            <tr><th>Time &mdash; best</th><td id="ins-best"></td></tr>
+            <tr><th>Time &mdash; average</th><td id="ins-avg"></td></tr>
+            <tr><th>Time &mdash; worst</th><td id="ins-worst"></td></tr>
+            <tr><th>Space</th><td id="ins-space"></td></tr>
+            <tr><th>Stable</th><td id="ins-stable"></td></tr>
+            <tr><th>In place</th><td id="ins-inplace"></td></tr>
+            <tr><th>Adaptive</th><td id="ins-adaptive"></td></tr>
+            <tr><th>Method</th><td id="ins-method"></td></tr>
+          </tbody>
+        </table>
+        <div class="case best"><b>Best case</b><span id="ins-bestwhen"></span></div>
+        <div class="case worst"><b>Worst case</b><span id="ins-worstwhen"></span></div>
+      </div>
+
+      <div class="insp-section">
+        <div class="sec-head">Strengths</div>
+        <ul class="bullets pro" id="ins-pros"></ul>
+        <div class="sec-head" style="margin-top:12px">Weaknesses</div>
+        <ul class="bullets con" id="ins-cons"></ul>
+      </div>
+
+      <div class="insp-section">
+        <div class="sec-head">Good to know</div>
+        <p class="insp-text fact" id="ins-fact"></p>
+      </div>
+    </div>
+
+    <div id="tab-code" class="tabpane">
+      <div class="lang-bar" id="lang-bar"></div>
+      <div class="code-head">
+        <span class="fname" id="code-file">bubble_sort.py</span>
+        <span class="spacer"></span>
+        <button class="mini-btn" id="btn-copy">Copy</button>
+        <button class="mini-btn" id="btn-download">Save</button>
+      </div>
+      <pre id="code"></pre>
+    </div>
+  </aside>
+
+</div>
+
+<script src="js/engine3d.js"></script>
+<script src="js/algorithms.js"></script>
+<script src="js/complexity.js"></script>
+<script src="js/code/python.js"></script>
+<script src="js/code/java.js"></script>
+<script src="js/code/cpp.js"></script>
+<script src="js/code/c.js"></script>
+<script src="js/code/javascript.js"></script>
+<script src="js/code/csharp.js"></script>
+<script src="js/code/go.js"></script>
+<script src="js/code/rust.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
